@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useDataManager } from '@/stores/dataManager';
 import { ClipboardDocumentListIcon, NumberedListIcon, ScaleIcon } from '@heroicons/vue/24/solid'
-import { computed, onMounted, reactive, ref } from 'vue';
+import { reactive} from 'vue';
 
 const data = reactive({
     date: null,
@@ -12,7 +12,9 @@ const data = reactive({
 
 const store = useDataManager()
 
-if (!store.getExercises.length) store.fetchExercises()
+if (!store.getExercises.length) {
+    store.fetchExercises()
+}
 </script>
 
 <template>
@@ -20,7 +22,8 @@ if (!store.getExercises.length) store.fetchExercises()
         <h1 class="text-xl pt-5 text-primary tracking-wide">Registrar Serie:</h1>
         <hr class="border-secondary" />
 
-        <label class="form-control w-full">
+        <div class="flex flex-col gap-4 px-5 box" v-if="!store.getFormData.loading">
+            <label class="form-control w-full">
             <div class="label">
                 <span class="label-text">Tipo de ejercicio</span>
                 <span class="label-text-alt">Crear uno</span>
@@ -29,8 +32,8 @@ if (!store.getExercises.length) store.fetchExercises()
                 <option disabled selected>
                     ejercicio
                 </option>
-                <option v-for="ex in store.getExercises">
-                    {{ ex.name }}
+                <option v-for="ex in store.getExercisesOrdered">
+                    {{ ex }}
                 </option>
             </select>
         </label>
@@ -52,7 +55,13 @@ if (!store.getExercises.length) store.fetchExercises()
         </label>
 
         <button class="btn btn-primary">Submit</button>
-    </div>
+
+        </div>
+
+        <div v-else class="w-full flex justify-center">
+            <span class="loading loading-dots loading-lg text-primary mt-10"></span>
+        </div>
+     </div>
 </template>
 
 <style>

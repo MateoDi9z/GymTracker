@@ -1,9 +1,9 @@
-import api, { user } from '@/data/api'
 import { defineStore } from 'pinia'
 import type { OptionalSerie } from "@/models/Serie"
 import { User } from "@/models/User"
 import { Serie } from "@/models/Serie"
 import { Ejercicio } from "@/models/Ejercicio"
+import { useFirebaseStore } from './firebase'
 
 type State = {
     user: User,
@@ -23,7 +23,7 @@ type State = {
 export const useDataManager = defineStore('data',  {
     state: (): State => {
         return {
-            user: user,
+            user: new User(1, "Mateo"),
             series: [],
             exercises: [],
             
@@ -35,17 +35,23 @@ export const useDataManager = defineStore('data',  {
                 feedback: "",
             },
 
-            addSerieForm: {}
+            addSerieForm: {},
         }
     },
 
     actions: {
-        fetchSeries() {
-            this.series = api.Repetitions.get(this.user)
+        async fetchSeries() {
+            this.formData.loading = true
+            const fb = useFirebaseStore()
+            this.series = await fb.Repetitions.get(this.user) 
+            this.formData.loading = false    
         },
-        
-        fetchExercises() {
-            this.exercises = api.Exercises.get()
+
+        async fetchExercises() {
+            this.formData.loading = true
+            const fb = useFirebaseStore()
+            this.exercises = await fb.Ejercicios.get()
+            this.formData.loading = false
         },
 
         setForm(newForm: OptionalSerie) {
@@ -55,7 +61,7 @@ export const useDataManager = defineStore('data',  {
         addSerie() {
             this.formData.loading = true
 
-            const valid = Serie.validate(this.addSerieForm)
+            const valid = Serie.checkSchema(this.addSerieForm)
             
             if (!valid) {
                 this.formData.error = true
@@ -71,5 +77,11 @@ export const useDataManager = defineStore('data',  {
     getters: {
         getUser: (state) => state.user,
         getExercises: (state) => state.exercises,
+        getExercisesOrdered: (state) => {
+            const texts: string[] = []
+            state.exercises.forEach((x) => texts.push(`${x.getMuscleGroup()} - ${x.getName()}`))
+            return texts.sort()
+        },
+        getFormData: (state) => state.formData
     }
 })
